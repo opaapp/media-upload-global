@@ -1,5 +1,5 @@
 {
-  "name": "media-upload-models",
+  "name": "media-upload-dbglobal",
   "version": "1.0.0",
   "description": "mongoose models and schemas",
   "main": "index.js",
