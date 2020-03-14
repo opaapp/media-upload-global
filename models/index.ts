@@ -1,4 +1,5 @@
-import Job, { IJob, FilePayload } from 'schemas/job';
+import Job, { IJob, FilePayload } from '../schemas/job';
+import { Logger } from '@overnightjs/logger';
 
 export class JobModel {
     private _jobModel: IJob;

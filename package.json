@@ -7,5 +7,13 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Jamal",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@overnightjs/logger": "^1.1.10"
+  },
+  "devDependencies": {
+    "@types/mongoose": "^5.7.6",
+    "@types/mongodb": "^3.5.2",
+    "@types/node": "^13.9.0"
+  }
 }
