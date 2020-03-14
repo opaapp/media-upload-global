@@ -12,6 +12,32 @@ export class JobModel {
         return this._jobModel.filename;
     }
 
+    static fetchNextJob() : Promise<IJob|null> {
+        console.info('Fetch next job in queue started');
+        return new Promise((resolve, reject) => {
+            Job.findOneAndUpdate({
+                startTime: null,
+                sort: {createdOn: 1}
+            }, {
+                $set: {startTime: new Date()}
+            }, (err, job) => {
+                if (err) {
+                    console.error(err.toString());
+                    return reject(err);
+                }
+
+                if (job == null) {
+                    console.info('Fetch next job in queue returned empty');
+                    return resolve(null);
+                }
+
+                console.info('Fetch next job in queue successful');
+                console.log(`job ${job}`);
+                return resolve(job);
+            })
+        })
+    }
+
     static createJob(filename: string, payload: FilePayload) : Promise<IJob> {
         console.info(`Job create of ${filename} started`);
         return new Promise((resolve, reject) => {
