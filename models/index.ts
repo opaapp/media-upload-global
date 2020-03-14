@@ -12,18 +12,18 @@ export class JobModel {
         return this._jobModel.filename;
     }
 
-    static fetchNextJob() : Promise<IJob|null> {
+    static fetchNextJob() : Promise<IJob|null|Error> {
         console.info('Fetch next job in queue started');
         return new Promise((resolve, reject) => {
             Job.findOneAndUpdate({
-                startTime: null,
+                startTime: undefined,
                 sort: {createdOn: 1}
             }, {
                 $set: {startTime: new Date()}
             }, (err, job) => {
                 if (err) {
                     console.error(err.toString());
-                    return reject(err);
+                    return reject(err as Error);
                 }
 
                 if (job == null) {
