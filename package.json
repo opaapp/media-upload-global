@@ -9,7 +9,8 @@
   "author": "Jamal",
   "license": "ISC",
   "dependencies": {
-    "@overnightjs/logger": "^1.1.10"
+    "@overnightjs/logger": "^1.1.10",
+    "mongoose": "^5.9.4"
   },
   "devDependencies": {
     "@types/mongoose": "^5.7.6",
