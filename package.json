@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@overnightjs/logger": "^1.1.10",
+    "luxon": "^1.22.0",
     "mongoose": "^5.9.4"
   },
   "description": "mongoose models and schemas",
