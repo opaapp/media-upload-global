@@ -1,20 +1,48 @@
 {
-  "name": "media-upload-global",
-  "version": "1.0.1",
-  "description": "mongoose models and schemas",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "_args": [
+    [
+      "git+ssh://git@github.com/opaapp/media-upload-global.git#master",
+      "/Users/jamal/projects/opaapp/backend/media-upload/converter"
+    ]
+  ],
+  "_from": "git+ssh://git@github.com/opaapp/media-upload-global.git#master",
+  "_id": "global@git+ssh://git@github.com/opaapp/media-upload-global.git#579fbed90de587f6892d1ab0caedf9bf6e3090a7",
+  "_inBundle": false,
+  "_integrity": "",
+  "_location": "/global",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "git",
+    "raw": "git+ssh://git@github.com/opaapp/media-upload-global.git#master",
+    "rawSpec": "git+ssh://git@github.com/opaapp/media-upload-global.git#master",
+    "saveSpec": "git+ssh://git@github.com/opaapp/media-upload-global.git#master",
+    "fetchSpec": "ssh://git@github.com/opaapp/media-upload-global.git",
+    "gitCommittish": "master"
   },
-  "author": "Jamal",
-  "license": "ISC",
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "git+ssh://git@github.com/opaapp/media-upload-global.git#579fbed90de587f6892d1ab0caedf9bf6e3090a7",
+  "_spec": "git+ssh://git@github.com/opaapp/media-upload-global.git#master",
+  "_where": "/Users/jamal/projects/opaapp/backend/media-upload/converter",
+  "author": {
+    "name": "Jamal"
+  },
   "dependencies": {
     "@overnightjs/logger": "^1.1.10",
     "mongoose": "^5.9.4"
   },
+  "description": "mongoose models and schemas",
   "devDependencies": {
-    "@types/mongoose": "^5.7.6",
     "@types/mongodb": "^3.5.2",
+    "@types/mongoose": "^5.7.6",
     "@types/node": "^13.9.0"
-  }
+  },
+  "license": "ISC",
+  "main": "index.js",
+  "name": "global",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "version": "1.0.1"
 }

@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface FilePayload {
     cloud_url: string;
@@ -11,6 +11,11 @@ export interface IJob extends Document {
     endTime: Date;
     createdOn: Date;
     payload: FilePayload;
+    updateStartTime(): Promise<void>;
+}
+
+export interface IJobModel extends Model<IJob> {
+    updateStartTime(): Promise<void>;
 }
 
 const _JobSchema: Schema = new Schema({
@@ -24,4 +29,12 @@ const _JobSchema: Schema = new Schema({
      },
 })
 
-export default mongoose.model<IJob>('Job', _JobSchema);
+_JobSchema.methods.updateStartTime = function() {
+    // NOTE: only good for return properties defined on objects;
+    // not used for saving models
+    return;
+}
+
+_JobSchema.index({ startTime: 1, createdOn: 1 });
+  
+export const Job: IJobModel = mongoose.model<IJob, IJobModel>('Job', _JobSchema);
