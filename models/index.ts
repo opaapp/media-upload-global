@@ -22,7 +22,7 @@ export class ContentModel {
                     index,
                     uploadedOn: new Date()
                 }}
-            }, (err, content) => {
+            }, {new: true}, (err, content) => {
                 if (err) {
                     console.error(err.toString());
                     return reject(err);
@@ -30,14 +30,15 @@ export class ContentModel {
 
                 if (content) {
                     const partsReceived = content.parts?.length;
-                    if (partsReceived) {
+                    if (partsReceived > 0) {
                         const partsRemaining = Number(content.totalParts) - partsReceived;
                         return resolve(partsRemaining);
                     }
-                }
-                
-                return reject(new Error(`Failed to lookup content with clientID, ${clientID}`));
-            })
+                } else {
+
+                    return reject(new Error(`Failed to lookup content with clientID, ${clientID}`));
+              }
+           })
         })
     }
 
