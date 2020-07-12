@@ -1,8 +1,56 @@
 import { Job, IJob, FilePayload } from '../schemas/job';
+import { Content, IContent } from '../schemas/content';
 import { Logger } from '@overnightjs/logger';
 import { DateTime } from 'luxon';
 
 const JOB_COMPLETION_INTERVAL_IN_SECONDS: number = Number(process.env['JOB_COMPLETION_INTERVAL_IN_SECONDS']) || 80;
+
+export class ContentModel {
+    private _contentModel: IContent;
+
+    constructor(contentModel: IContent) {
+        this._contentModel = contentModel;
+    }
+
+    static addPart(clientID: string, payload: Buffer, index: Number) {
+        return new Promise((resolve, reject) => {
+            Content.findByIdAndUpdate({
+                clientID
+            }, {
+                $push: { parts: {
+                    payload,
+                    index,
+                    uploadedOn: new Date()
+                }}
+            }, (err, content) => {
+                if (err) {
+                    console.error(err.toString());
+                    return reject(err);
+                }
+
+                return resolve(content);
+            })
+        })
+    }
+
+    static createNew(clientID: string) {
+        return new Promise((resolve, reject) => {
+            const content: IContent = new Content({
+                clientID,
+                createdOn: new Date()
+            });
+
+            content.save((err, obj) => {
+                if (err) {
+                    Logger.Err(err.toString());
+                    return reject(err);
+                }
+
+                return resolve(obj);
+            })
+        })
+    }
+}
 
 export class JobModel {
     private _jobModel: IJob;
