@@ -14,7 +14,7 @@ export class ContentModel {
 
     static addPart(clientID: string, payload: Buffer, index: Number) {
         return new Promise((resolve, reject) => {
-            Content.findByIdAndUpdate({
+            Content.findOneAndUpdate({
                 clientID
             }, {
                 $push: { parts: {

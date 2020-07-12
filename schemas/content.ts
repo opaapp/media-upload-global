@@ -27,4 +27,6 @@ const _ContentSchema: Schema = new Schema({
     }]
 })
 
+_ContentSchema.index({ clientID: 1 });
+
 export const Content: IContentModel = mongoose.model<IContent>('Content', _ContentSchema);
