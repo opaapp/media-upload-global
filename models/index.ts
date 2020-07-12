@@ -33,10 +33,11 @@ export class ContentModel {
         })
     }
 
-    static createNew(clientID: string) {
+    static createNew(clientID: string, totalParts: number) {
         return new Promise((resolve, reject) => {
             const content: IContent = new Content({
                 clientID,
+                totalParts,
                 createdOn: new Date()
             });
 
