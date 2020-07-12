@@ -28,7 +28,9 @@ export class ContentModel {
                     return reject(err);
                 }
 
-                return resolve(content);
+                const partsReceived = content.parts.length;
+                const partsRemaining = Number(content.totalParts) - partsReceived;
+                return resolve(partsRemaining);
             })
         })
     }
