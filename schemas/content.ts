@@ -13,8 +13,7 @@ export interface IContent extends Document {
     parts: [ ContentPart ];
 }
 
-export interface IContentModel extends Model<IContent> {
-}
+export interface IContentModel extends Model<IContent> {}
 
 const _ContentSchema: Schema = new Schema({
     clientID: { type: String, required: true, unique: true },

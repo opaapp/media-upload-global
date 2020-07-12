@@ -28,9 +28,15 @@ export class ContentModel {
                     return reject(err);
                 }
 
-                const partsReceived = Number(content.parts!.length);
-                const partsRemaining = Number(content.totalParts) - partsReceived;
-                return resolve(partsRemaining);
+                if (content) {
+                    const partsReceived = content.parts?.length;
+                    if (partsReceived) {
+                        const partsRemaining = Number(content.totalParts) - partsReceived;
+                        return resolve(partsRemaining);
+                    }
+                }
+                
+                return reject(new Error(`Failed to lookup content with clientID, ${clientID}`));
             })
         })
     }
