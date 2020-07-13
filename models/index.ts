@@ -12,7 +12,7 @@ export class ContentModel {
         this._contentModel = contentModel;
     }
 
-    static addPart(clientID: string, payload: Buffer, index: Number) {
+    static addPart(clientID: string, payload: Buffer, index: number) {
         return new Promise((resolve, reject) => {
             Content.findOneAndUpdate({
                 clientID
@@ -22,7 +22,7 @@ export class ContentModel {
                     index,
                     uploadedOn: new Date()
                 }}
-            }, {new: true}, (err, content) => {
+            }, { new: true }, (err, content) => {
                 if (err) {
                     console.error(err.toString());
                     return reject(err);
@@ -35,7 +35,6 @@ export class ContentModel {
                         return resolve(partsRemaining);
                     }
                 } else {
-
                     return reject(new Error(`Failed to lookup content with clientID, ${clientID}`));
               }
            })
@@ -50,13 +49,17 @@ export class ContentModel {
                 createdOn: new Date()
             });
 
-            content.save((err, obj) => {
+            content.save((err, _obj) => {
                 if (err) {
+                    if (err.toString().match('E11000 duplicate key error') !== null) {
+                      return resolve(null);
+                    }
+
                     Logger.Err(err.toString());
                     return reject(err);
                 }
 
-                return resolve(obj);
+                return resolve(null);
             })
         })
     }
