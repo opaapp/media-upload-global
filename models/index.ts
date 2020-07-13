@@ -1,5 +1,6 @@
+import mongoose, { mongo } from 'mongoose';
 import { Job, IJob, FilePayload } from '../schemas/job';
-import { Content, IContent } from '../schemas/content';
+import { Content, IContent, ContentPart, IContentPart, IContentPartModel } from '../schemas/content';
 import { Logger } from '@overnightjs/logger';
 import { DateTime } from 'luxon';
 
@@ -13,31 +14,43 @@ export class ContentModel {
     }
 
     static addPart(clientID: string, payload: Buffer, index: number) {
-        return new Promise((resolve, reject) => {
-            Content.findOneAndUpdate({
-                clientID
-            }, {
-                $push: { parts: {
-                    payload,
-                    index,
-                    uploadedOn: new Date()
-                }}
-            }, { new: true }, (err, content) => {
-                if (err) {
-                    console.error(err.toString());
-                    return reject(err);
-                }
+        return new Promise(async (resolve, reject) => {
+            const session = await mongoose.startSession();
+            session.startTransaction();
+            try {
+                const contentPart: IContentPart = new ContentPart({ payload });
+                
+                await contentPart.save();
+
+                const content = await Content.findOneAndUpdate({
+                    clientID
+                }, {
+                    $push: { parts: {
+                        payload: contentPart,
+                        index,
+                        uploadedOn: new Date()
+                }}}, { new: true }).session(session)
+
+                console.log('nC: ', content);
 
                 if (content) {
                     const partsReceived = content.parts?.length;
                     if (partsReceived > 0) {
                         const partsRemaining = Number(content.totalParts) - partsReceived;
+                        await session.commitTransaction();
                         return resolve(partsRemaining);
                     }
                 } else {
                     return reject(new Error(`Failed to lookup content with clientID, ${clientID}`));
-              }
-           })
+                }
+            } catch (error) {
+                await session.abortTransaction();
+                console.error(error);
+                throw error;
+            } finally {
+                session.endSession();
+            }
+            
         })
     }
 
