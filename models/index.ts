@@ -54,9 +54,10 @@ export class ContentModel {
         })
     }
 
-    static createNew(clientID: string, totalParts: number) {
+    static createNew(videoID: string, clientID: string, totalParts: number) {
         return new Promise((resolve, reject) => {
             const content: IContent = new Content({
+                videoID,
                 clientID,
                 totalParts,
                 createdOn: new Date()

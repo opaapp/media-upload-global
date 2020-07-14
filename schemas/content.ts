@@ -5,6 +5,7 @@ export interface IContentPart extends Document {
 }
 
 export interface IContent extends Document {
+    videoID: Schema.Types.ObjectId;
     clientID: string;
     createdOn: Date;
     totalParts: Number;
@@ -18,6 +19,7 @@ export interface IContent extends Document {
 export interface IContentModel extends Model<IContent> {}
 
 const _ContentSchema: Schema = new Schema({
+    videoID: { type: Schema.Types.ObjectId, required: true, unique: true },
     clientID: { type: String, required: true, unique: true },
     createdOn: { type: Date, required: true },
     totalParts: { type: Number, required: true},
@@ -28,6 +30,7 @@ const _ContentSchema: Schema = new Schema({
     }]
 })
 
+_ContentSchema.index({ videoID: 1 });
 _ContentSchema.index({ clientID: 1 });
 
 const _ContentPartSchema: Schema = new Schema({
