@@ -97,8 +97,9 @@ export class JobModel {
 
                 content.forEach(c => {
                     if (c.parts.length === c.totalParts) {
-                        console.log('creating job for ', c._id);
-                        this.createJob(c._id);
+                        const videoID = String(c.videoID);
+                        console.log('creating job for ', videoID);
+                        this.createJob(videoID);
                     }
                     for (const part of c.parts) {
                         console.log('PART - ', part.index);
