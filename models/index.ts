@@ -1,8 +1,9 @@
 import mongoose, { mongo } from 'mongoose';
-import { Job, IJob, FilePayload } from '../schemas/job';
+import { Job, IJob   } from '../schemas/job';
 import { Content, IContent, ContentPart, IContentPart, IContentPartModel } from '../schemas/content';
 import { Logger } from '@overnightjs/logger';
 import { DateTime } from 'luxon';
+import { resolve } from 'path';
 
 const JOB_COMPLETION_INTERVAL_IN_SECONDS: number = Number(process.env['JOB_COMPLETION_INTERVAL_IN_SECONDS']) || 80;
 
@@ -86,8 +87,27 @@ export class JobModel {
         this._jobModel = jobModel;
     }
 
-    get filename(): string {
-        return this._jobModel.filename;
+    static fetchContent() : Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            console.log('fetching content ... ')
+            Content.find({ jobCreatedOn: { $eq: undefined }}, (err, content) => {
+                if (err) {
+                    return reject(err);
+                }
+
+                content.forEach(c => {
+                    if (c.parts.length === c.totalParts) {
+                        console.log('creating job for ', c._id);
+                        this.createJob(c._id);
+                    }
+                    for (const part of c.parts) {
+                        console.log('PART - ', part.index);
+                    }
+                })
+            })
+
+            return resolve(false);
+        })
     }
 
     static removeJob(job: IJob) : Promise<boolean> {
@@ -142,24 +162,40 @@ export class JobModel {
         })
     }
 
-    static createJob(filename: string, payload: FilePayload) : Promise<IJob> {
-        console.info(`Job create of ${filename} started`);
-        return new Promise((resolve, reject) => {
-            const job: IJob = new Job({
-                filename,
-                payload,
-                createdOn: new Date(),
-            });
+    static createJob(contentID: string) : Promise<IJob> {
+        console.info(`Job create of contentID, ${contentID}, started`);
+        return new Promise(async (resolve, _reject) => {
+            const session = await mongoose.startSession();
+            session.startTransaction();
+            try {
+                // Create a new job
+                    const job: IJob = new Job({
+                        contentID,
+                        createdOn: new Date(),
+                    });
+        
+                    let obj = await job.save()
+                    
+                    console.info(`Job create (id ${obj._id}) successful`);
+                  
+                // Update the content object to reflect the job created against it
+                    await Content.findByIdAndUpdate(contentID, {
+                        $set: { jobCreatedOn: new Date() }
+                    }).session(session)
 
-            job.save((err, obj) => {
-                if (err) {
-                    Logger.Err(err.toString());
-                    return reject(err);
-                }
+                    console.info('Content updated to reflect job');
 
-                console.info(`Job create (id ${obj._id}) of ${obj.filename} successful`);
-                return resolve(obj);
-            })
+                await session.commitTransaction();
+                session.endSession();
+                return resolve(job);
+            } catch (error) {
+
+                // If an error occurred, abort the whole transaction and
+                // undo any changes that might have happened
+                await session.abortTransaction();
+                session.endSession();
+                throw error; 
+            }
         })
     }
 }
