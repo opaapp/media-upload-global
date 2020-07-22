@@ -23,7 +23,7 @@ const _ContentSchema: Schema = new Schema({
     videoID: { type: Schema.Types.ObjectId, required: true, unique: true },
     clientID: { type: String, required: true, unique: true },
     createdOn: { type: Date, required: true },
-    jobCreatedOn: { type: Date, required: true, default: undefined },
+    jobCreatedOn: { type: Date, required: false, default: undefined },
     totalParts: { type: Number, required: true},
     parts: [{
         part: { type: Schema.Types.ObjectId, ref: 'contentparts'},
