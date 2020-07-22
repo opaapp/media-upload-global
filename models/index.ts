@@ -27,7 +27,7 @@ export class ContentModel {
                     clientID
                 }, {
                     $push: { parts: {
-                        payload: contentPart,
+                        part: contentPart,
                         index,
                         uploadedOn: new Date()
                 }}}, { new: true }).session(session)
