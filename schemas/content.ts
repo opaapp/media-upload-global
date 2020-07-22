@@ -8,9 +8,10 @@ export interface IContent extends Document {
     videoID: Schema.Types.ObjectId;
     clientID: string;
     createdOn: Date;
+    jobCreatedOn: Date;
     totalParts: Number;
     parts: [{
-        payload: Schema.Types.ObjectId,
+        part: Schema.Types.ObjectId,
         index: Number,
         uploadedOn: Date
     }];
@@ -22,9 +23,10 @@ const _ContentSchema: Schema = new Schema({
     videoID: { type: Schema.Types.ObjectId, required: true, unique: true },
     clientID: { type: String, required: true, unique: true },
     createdOn: { type: Date, required: true },
+    jobCreatedOn: { type: Date, required: true, default: undefined },
     totalParts: { type: Number, required: true},
     parts: [{
-        payload: { type: Schema.Types.ObjectId, ref: 'contents'},
+        part: { type: Schema.Types.ObjectId, ref: 'contentparts'},
         index: { type: Number, required: true },
         uploadedOn: { type: Date, required: true } 
     }]
