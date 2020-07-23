@@ -94,11 +94,13 @@ export class JobModel {
                     return reject(err);
                 }
 
-                console.log('ID - ', content._id);
+                if (content) {
+                    console.log('ID - ', content._id);
 
-                if (content.parts.length === content.totalParts) {
-                    console.log('creating job for ', content.videoID);
-                    await this.createJob(content);
+                    if (content.parts.length === content.totalParts) {
+                        console.log('creating job for ', content.videoID);
+                        await this.createJob(content);
+                    }
                 }
             })
 
