@@ -86,7 +86,26 @@ export class JobModel {
         this._jobModel = jobModel;
     }
 
-    static fetchContent() : Promise<boolean> {
+    static validateContent(content: IContent) : boolean {
+        const len = content.parts.length;
+        const allParts = new Array(len).fill(0);
+        for (const part of content.parts) {
+            if (part.index < len) {
+                allParts[String(part.index)] = 1;
+            }
+        }
+
+        for (let i=0; i<allParts.length; i++) {
+            if (allParts[i] == 0) {
+                console.error(`ERROR: missing part ${i} for content, id=${content._id}`);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    static fetchContent() : Promise<void> {
         return new Promise((resolve, reject) => {
             console.log('fetching content ... ')
             Content.findOne({ jobCreatedOn: undefined }, async (err, content) => {
@@ -97,14 +116,14 @@ export class JobModel {
                 if (content) {
                     console.log('ID - ', content._id);
 
-                    if (content.parts.length === content.totalParts) {
+                    if (content.parts.length >= content.totalParts && this.validateContent(content)) {
                         console.log('creating job for ', content.videoID);
                         await this.createJob(content);
                     }
                 }
             })
 
-            return resolve(false);
+            return resolve();
         })
     }
 
