@@ -97,10 +97,8 @@ export class JobModel {
                 console.log('ID - ', content._id);
 
                 if (content.parts.length === content.totalParts) {
-                    const videoID = String(content.videoID);
-                    console.log('creating job for ', videoID);
-            
-                    await this.createJob(videoID);
+                    console.log('creating job for ', content.videoID);
+                    await this.createJob(content);
                 }
             })
 
