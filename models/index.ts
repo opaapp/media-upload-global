@@ -1,4 +1,4 @@
-import mongoose, { mongo } from 'mongoose';
+import mongoose, { mongo, Schema } from 'mongoose';
 import { Job, IJob   } from '../schemas/job';
 import { Content, IContent, ContentPart, IContentPart, IContentPartModel } from '../schemas/content';
 import { Logger } from '@overnightjs/logger';
@@ -51,7 +51,6 @@ export class ContentModel {
             } finally {
                 session.endSession();
             }
-            
         })
     }
 
@@ -90,21 +89,19 @@ export class JobModel {
     static fetchContent() : Promise<boolean> {
         return new Promise((resolve, reject) => {
             console.log('fetching content ... ')
-            Content.find({ jobCreatedOn: { $eq: undefined }}, (err, content) => {
+            Content.findOne({ jobCreatedOn: undefined }, async (err, content) => {
                 if (err) {
                     return reject(err);
                 }
 
-                content.forEach(c => {
-                    if (c.parts.length === c.totalParts) {
-                        const videoID = String(c.videoID);
-                        console.log('creating job for ', videoID);
-                        this.createJob(videoID);
-                    }
-                    for (const part of c.parts) {
-                        console.log('PART - ', part.index);
-                    }
-                })
+                console.log('ID - ', content._id);
+
+                if (content.parts.length === content.totalParts) {
+                    const videoID = String(content.videoID);
+                    console.log('creating job for ', videoID);
+            
+                    await this.createJob(videoID);
+                }
             })
 
             return resolve(false);
@@ -163,7 +160,8 @@ export class JobModel {
         })
     }
 
-    static createJob(contentID: string) : Promise<IJob> {
+    static createJob(content: IContent) : Promise<IJob> {
+        const contentID : String = String(content._id);
         console.info(`Job create of contentID, ${contentID}, started`);
         return new Promise(async (resolve, _reject) => {
             const session = await mongoose.startSession();
@@ -180,9 +178,11 @@ export class JobModel {
                     console.info(`Job create (id ${obj._id}) successful`);
                   
                 // Update the content object to reflect the job created against it
-                    await Content.findByIdAndUpdate(contentID, {
-                        $set: { jobCreatedOn: new Date() }
-                    }).session(session)
+                    // await Content.findOneAndUpdate({ videoID: new Schema.Types.ObjectId(contentID) }, {
+                    //     $set: { jobCreatedOn: new Date() }
+                    // }).session(session)
+                    content.jobCreatedOn = new Date();
+                    await content.save();
 
                     console.info('Content updated to reflect job');
 
