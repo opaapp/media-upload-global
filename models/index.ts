@@ -91,7 +91,7 @@ export class JobModel {
         const allParts: Array<number> = new Array(len);
         for (const part of content.parts) {
             if (part.index < len) {
-                allParts[String(part.index)] = 1;
+                allParts[part.index] = 1;
             }
         }
 
