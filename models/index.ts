@@ -88,7 +88,7 @@ export class JobModel {
 
     static validateContent(content: IContent) : boolean {
         const len = content.parts.length;
-        const allParts = new Array(len).fill(0);
+        const allParts: Array<number> = new Array(len);
         for (const part of content.parts) {
             if (part.index < len) {
                 allParts[String(part.index)] = 1;
@@ -96,7 +96,7 @@ export class JobModel {
         }
 
         for (let i=0; i<allParts.length; i++) {
-            if (allParts[i] == 0) {
+            if (allParts[i] !== 1) {
                 console.error(`ERROR: missing part ${i} for content, id=${content._id}`);
                 return false;
             }
