@@ -9,10 +9,10 @@ export interface IContent extends Document {
     clientID: string;
     createdOn: Date;
     jobCreatedOn: Date;
-    totalParts: Number;
+    totalParts: number;
     parts: [{
         part: Schema.Types.ObjectId,
-        index: Number,
+        index: number,
         uploadedOn: Date
     }];
 }
