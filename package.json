@@ -6,7 +6,7 @@
     ]
   ],
   "_from": "git+ssh://git@github.com/opaapp/media-upload-global.git#master",
-  "_id": "global@git+ssh://git@github.com/opaapp/media-upload-global.git#f3e30763890d0b564f0575f6429387c61c23bdcc",
+  "_id": "global@git+ssh://git@github.com/opaapp/media-upload-global.git#751fa8387bed8244303af9949b743ea1ee22e0b9",
   "_inBundle": false,
   "_integrity": "",
   "_location": "/global",
@@ -22,7 +22,7 @@
   "_requiredBy": [
     "/"
   ],
-  "_resolved": "git+ssh://git@github.com/opaapp/media-upload-global.git#f3e30763890d0b564f0575f6429387c61c23bdcc",
+  "_resolved": "git+ssh://git@github.com/opaapp/media-upload-global.git#751fa8387bed8244303af9949b743ea1ee22e0b9",
   "_spec": "git+ssh://git@github.com/opaapp/media-upload-global.git#master",
   "_where": "/Users/jamal/projects/opaapp/backend/media-upload/converter",
   "author": {
@@ -37,7 +37,7 @@
   "devDependencies": {
     "@types/mongodb": "^3.5.25",
     "@types/mongoose": "^5.7.32",
-    "@types/node": "^13.13.14"
+    "@types/node": "^13.13.15"
   },
   "license": "ISC",
   "main": "index.js",
