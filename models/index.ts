@@ -107,15 +107,12 @@ export class JobModel {
 
     static fetchContent() : Promise<void> {
         return new Promise((resolve, reject) => {
-            console.log('fetching content ... ')
             Content.findOne({ jobCreatedOn: undefined }, async (err, content) => {
                 if (err) {
                     return reject(err);
                 }
 
                 if (content) {
-                    console.log('ID - ', content._id);
-
                     if (content.parts.length >= content.totalParts && this.validateContent(content)) {
                         console.log('creating job for ', content.videoID);
                         await this.createJob(content);
