@@ -87,7 +87,7 @@ export class JobModel {
     }
 
     static validateContent(content: IContent) : boolean {
-        const len = content.parts.length;
+        const len = content.totalParts;
         const allParts: Array<number> = new Array(len);
         for (const part of content.parts) {
             if (part.index < len) {
