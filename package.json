@@ -6,7 +6,7 @@
     ]
   ],
   "_from": "git+ssh://git@github.com/opaapp/media-upload-global.git#master",
-  "_id": "global@git+ssh://git@github.com/opaapp/media-upload-global.git#72b50de7398125fcc490ee18f77d5f93bf6dcbaf",
+  "_id": "global@git+ssh://git@github.com/opaapp/media-upload-global.git#2858dce09f68e1df6a6be38b324e6dbe298ccc48",
   "_inBundle": false,
   "_integrity": "",
   "_location": "/global",
@@ -22,7 +22,7 @@
   "_requiredBy": [
     "/"
   ],
-  "_resolved": "git+ssh://git@github.com/opaapp/media-upload-global.git#72b50de7398125fcc490ee18f77d5f93bf6dcbaf",
+  "_resolved": "git+ssh://git@github.com/opaapp/media-upload-global.git#2858dce09f68e1df6a6be38b324e6dbe298ccc48",
   "_spec": "git+ssh://git@github.com/opaapp/media-upload-global.git#master",
   "_where": "/Users/jamal/projects/opaapp/backend/media-upload/converter",
   "author": {
