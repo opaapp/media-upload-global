@@ -10,7 +10,7 @@ export interface IContent extends Document {
     createdOn: Date;
     jobCreatedOn: Date;
     totalParts: number;
-    hasThumbnail: boolean;
+    preview_url: string;
     parts: [{
         part: Schema.Types.ObjectId,
         index: number,
@@ -26,7 +26,7 @@ const _ContentSchema: Schema = new Schema({
     createdOn: { type: Date, required: true },
     jobCreatedOn: { type: Date, required: false, default: undefined },
     totalParts: { type: Number, required: true},
-    hasThumbnail: { type: Boolean, required: true, default: false },
+    preview_url: { type: String, required: false },
     parts: [{
         part: { type: Schema.Types.ObjectId, ref: 'contentparts'},
         index: { type: Number, required: true },

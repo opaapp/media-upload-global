@@ -14,7 +14,7 @@ export class ContentModel {
         this._contentModel = contentModel;
     }
 
-    static recordThumbnail(clientID: string) : Promise<void> {
+    static addThumbnail(clientID: string, preview_url: string) : Promise<void> {
         return new Promise(async (resolve, reject) => {
             const session = await mongoose.startSession();
             session.startTransaction();
@@ -22,7 +22,7 @@ export class ContentModel {
                 const content = await Content.findOneAndUpdate({
                     clientID
                 }, {
-                    $set: { hasThumbnail: true }
+                    $set: { preview_url }
                 }, { new: true }).session(session)
 
                 console.log('nC: ', content);
