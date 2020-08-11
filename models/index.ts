@@ -14,7 +14,36 @@ export class ContentModel {
         this._contentModel = contentModel;
     }
 
-    static addPart(clientID: string, payload: Buffer, index: number) {
+    static recordThumbnail(clientID: string) : Promise<void> {
+        return new Promise(async (resolve, reject) => {
+            const session = await mongoose.startSession();
+            session.startTransaction();
+            try {
+                const content = await Content.findOneAndUpdate({
+                    clientID
+                }, {
+                    $set: { hasThumbnail: true }
+                }, { new: true }).session(session)
+
+                console.log('nC: ', content);
+
+                if (content) {
+                    await session.commitTransaction();
+                    return resolve();
+                } else {
+                    return reject(new Error(`Failed to lookup content with clientID, ${clientID}`));
+                }
+            } catch (error) {
+                await session.abortTransaction();
+                console.error(error);
+                throw error;
+            } finally {
+                session.endSession();
+            }
+        })
+    }
+
+    static addPart(clientID: string, payload: Buffer, index: number) : Promise<number> {
         return new Promise(async (resolve, reject) => {
             const session = await mongoose.startSession();
             session.startTransaction();
@@ -36,11 +65,9 @@ export class ContentModel {
 
                 if (content) {
                     const partsReceived = content.parts?.length;
-                    if (partsReceived > 0) {
-                        const partsRemaining = Number(content.totalParts) - partsReceived;
-                        await session.commitTransaction();
-                        return resolve(partsRemaining);
-                    }
+                    const partsRemaining = Number(content.totalParts) - partsReceived;
+                    await session.commitTransaction();
+                    return resolve(partsRemaining);
                 } else {
                     return reject(new Error(`Failed to lookup content with clientID, ${clientID}`));
                 }
