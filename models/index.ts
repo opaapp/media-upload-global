@@ -140,10 +140,12 @@ export class JobModel {
                 }
 
                 contents.map(async content => {
-                    if (content.parts.length >= content.totalParts && this.validateContent(content)) {
-                        console.log('creating job for ', content.videoID);
-                        await this.createJob(content);
-                    }
+                    if (content.parts.length >= content.totalParts && 
+                            content.hasThumbnail && this.validateContent(content))
+                        {
+                            console.log('creating job for ', content.videoID);
+                            await this.createJob(content);
+                        }
                 })
             }).sort({ createdOn: -1 })
 
