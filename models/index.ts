@@ -107,18 +107,18 @@ export class JobModel {
 
     static fetchContent() : Promise<void> {
         return new Promise((resolve, reject) => {
-            Content.findOne({ jobCreatedOn: undefined }, async (err, content) => {
+            Content.find({ jobCreatedOn: undefined }, (err, contents) => {
                 if (err) {
                     return reject(err);
                 }
 
-                if (content) {
+                contents.map(async content => {
                     if (content.parts.length >= content.totalParts && this.validateContent(content)) {
                         console.log('creating job for ', content.videoID);
                         await this.createJob(content);
                     }
-                }
-            })
+                })
+            }).sort({ createdOn: -1 })
 
             return resolve();
         })
