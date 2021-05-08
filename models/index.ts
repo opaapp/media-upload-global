@@ -43,6 +43,21 @@ export class ContentModel {
         })
     }
 
+    static partExists(clientID: string, index: number) : Promise<boolean> {
+        return new Promise(async (resolve, _) => {
+            const content = await Content.findOne({ clientID });
+            if (content) {
+                for (let i=0; i<content.parts.length; i++) {
+                    if (content.parts[i].index == index) {
+                        return resolve(true);
+                    }
+                }
+            }
+
+            return resolve(false);
+        })
+    }
+
     static addPart(clientID: string, payload: Buffer, index: number) : Promise<number> {
         return new Promise(async (resolve, reject) => {
             const session = await mongoose.startSession();
