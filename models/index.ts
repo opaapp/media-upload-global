@@ -80,11 +80,9 @@ export class ContentModel {
 
                 if (content) {
                     const partsReceived = content.parts?.length;
-                    if (partsReceived > 0) {
-                        const partsRemaining = Number(content.totalParts) - partsReceived;
-                        await session.commitTransaction();
-                        return resolve(partsRemaining);
-                    }
+                    const partsRemaining = Number(content.totalParts) - partsReceived;
+                    await session.commitTransaction();
+                    return resolve(partsRemaining);
                 } else {
                     return reject(new Error(`Failed to lookup content with clientID, ${clientID}`));
                 }
@@ -131,7 +129,7 @@ export class JobModel {
     }
 
     static validateContent(content: IContent) : boolean {
-        const len = content.parts.length;
+        const len = content.totalParts;
         const allParts: Array<number> = new Array(len);
         for (const part of content.parts) {
             if (part.index < len) {
@@ -151,18 +149,20 @@ export class JobModel {
 
     static fetchContent() : Promise<void> {
         return new Promise((resolve, reject) => {
-            Content.findOne({ jobCreatedOn: undefined }, async (err, content) => {
+            Content.find({ jobCreatedOn: undefined }, (err, contents) => {
                 if (err) {
                     return reject(err);
                 }
 
-                if (content) {
-                    if (content.parts.length >= content.totalParts && this.validateContent(content)) {
-                        console.log('creating job for ', content.videoID);
-                        await this.createJob(content);
-                    }
-                }
-            })
+                contents.map(async content => {
+                    if (content.parts.length >= content.totalParts && 
+                            content.preview_url && this.validateContent(content))
+                        {
+                            console.log('creating job for ', content.videoID);
+                            await this.createJob(content);
+                        }
+                })
+            }).sort({ createdOn: -1 })
 
             return resolve();
         })
