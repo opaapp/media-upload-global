@@ -14,7 +14,51 @@ export class ContentModel {
         this._contentModel = contentModel;
     }
 
-    static addPart(clientID: string, payload: Buffer, index: number) {
+    static addThumbnail(clientID: string, preview_url: string) : Promise<void> {
+        return new Promise(async (resolve, reject) => {
+            const session = await mongoose.startSession();
+            session.startTransaction();
+            try {
+                const content = await Content.findOneAndUpdate({
+                    clientID
+                }, {
+                    $set: { preview_url }
+                }, { new: true }).session(session)
+
+                console.log('nC: ', content);
+
+                if (content) {
+                    await session.commitTransaction();
+                    return resolve();
+                } else {
+                    return reject(new Error(`Failed to lookup content with clientID, ${clientID}`));
+                }
+            } catch (error) {
+                await session.abortTransaction();
+                console.error(error);
+                throw error;
+            } finally {
+                session.endSession();
+            }
+        })
+    }
+
+    static partExists(clientID: string, index: number) : Promise<boolean> {
+        return new Promise(async (resolve, _) => {
+            const content = await Content.findOne({ clientID });
+            if (content) {
+                for (let i=0; i<content.parts.length; i++) {
+                    if (content.parts[i].index == index) {
+                        return resolve(true);
+                    }
+                }
+            }
+
+            return resolve(false);
+        })
+    }
+
+    static addPart(clientID: string, payload: Buffer, index: number) : Promise<number> {
         return new Promise(async (resolve, reject) => {
             const session = await mongoose.startSession();
             session.startTransaction();
