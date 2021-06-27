@@ -20,7 +20,7 @@ export interface IJobModel extends Model<IJob> {
 }
 
 const _JobSchema: Schema = new Schema({
-    contentID: { type: Schema.Types.ObjectId, required: true, unique: true },
+    contentID: { type: Schema.Types.ObjectId, required: true },
     startTime: { type: Date, required: false },
     endTime: { type: Date, required: false },
     createdOn: { type: Date, required: true },
@@ -36,6 +36,6 @@ _JobSchema.methods.updateStartTime = function() {
 
 
 _JobSchema.index({ startTime: 1, createdOn: 1 });
-_JobSchema.index({ contentID: 1 }, { unique: false });
+_JobSchema.index({ contentID: 1, jobType: 1 }, { unique: true });
   
 export const Job: IJobModel = mongoose.model<IJob, IJobModel>('Job', _JobSchema);

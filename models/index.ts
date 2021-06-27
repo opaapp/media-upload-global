@@ -254,7 +254,7 @@ export class JobModel {
                     const job: IJob = new Job({
                         contentID,
                         createdOn: new Date(),
-                        jobType: "encode",
+                        jobType: `encode-${rendition.bitrate}`,
                         jobKwargs: JSON.stringify(rendition)
                     });
         
