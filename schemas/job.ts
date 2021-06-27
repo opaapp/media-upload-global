@@ -34,7 +34,8 @@ _JobSchema.methods.updateStartTime = function() {
     return;
 }
 
+
 _JobSchema.index({ startTime: 1, createdOn: 1 });
-_JobSchema.index({ contentID: 1 });
+_JobSchema.index({ contentID: 1 }, { unique: false });
   
 export const Job: IJobModel = mongoose.model<IJob, IJobModel>('Job', _JobSchema);
