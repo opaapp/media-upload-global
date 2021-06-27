@@ -10,6 +10,8 @@ export interface IJob extends Document {
     startTime: Date;
     endTime: Date;
     createdOn: Date;
+    jobType: String;
+    jobKwargs: String;
     updateStartTime(): Promise<void>;
 }
 
@@ -21,7 +23,9 @@ const _JobSchema: Schema = new Schema({
     contentID: { type: Schema.Types.ObjectId, required: true, unique: true },
     startTime: { type: Date, required: false },
     endTime: { type: Date, required: false },
-    createdOn: { type: Date, required: true }
+    createdOn: { type: Date, required: true },
+    jobType: String,
+    jobKwargs: String,
 })
 
 _JobSchema.methods.updateStartTime = function() {

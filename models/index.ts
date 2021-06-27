@@ -1,11 +1,18 @@
 import mongoose, { mongo, Schema } from 'mongoose';
-import { Job, IJob   } from '../schemas/job';
+import { Job, IJob } from '../schemas/job';
 import { Content, IContent, ContentPart, IContentPart, IContentPartModel } from '../schemas/content';
 import { Logger } from '@overnightjs/logger';
 import { DateTime } from 'luxon';
 import { resolve } from 'path';
 
 const JOB_COMPLETION_INTERVAL_IN_SECONDS: number = Number(process.env['JOB_COMPLETION_INTERVAL_IN_SECONDS']) || 80;
+
+export interface Rendition {
+    resolution: string;
+    bitrate: string;
+    audioRate: string;
+    crf: string;
+}
 
 export class ContentModel {
     private _contentModel: IContent;
@@ -16,29 +23,23 @@ export class ContentModel {
 
     static addThumbnail(clientID: string, preview_url: string) : Promise<void> {
         return new Promise(async (resolve, reject) => {
-            const session = await mongoose.startSession();
-            session.startTransaction();
             try {
                 const content = await Content.findOneAndUpdate({
                     clientID
                 }, {
                     $set: { preview_url }
-                }, { new: true }).session(session)
-
+                }, { new: true })
+                console.log('setting ', clientID, ' for ', preview_url);
                 console.log('nC: ', content);
 
                 if (content) {
-                    await session.commitTransaction();
                     return resolve();
                 } else {
                     return reject(new Error(`Failed to lookup content with clientID, ${clientID}`));
                 }
             } catch (error) {
-                await session.abortTransaction();
                 console.error(error);
-                throw error;
-            } finally {
-                session.endSession();
+                return reject(error);
             }
         })
     }
@@ -60,38 +61,27 @@ export class ContentModel {
 
     static addPart(clientID: string, payload: Buffer, index: number) : Promise<number> {
         return new Promise(async (resolve, reject) => {
-            const session = await mongoose.startSession();
-            session.startTransaction();
-            try {
-                const contentPart: IContentPart = new ContentPart({ payload });
-                
-                await contentPart.save();
+            const contentPart: IContentPart = new ContentPart({ payload });
+            
+            await contentPart.save();
 
-                const content = await Content.findOneAndUpdate({
-                    clientID
-                }, {
-                    $push: { parts: {
-                        part: contentPart,
-                        index,
-                        uploadedOn: new Date()
-                }}}, { new: true }).session(session)
+            const content = await Content.findOneAndUpdate({
+                clientID
+            }, {
+                $push: { parts: {
+                    part: contentPart,
+                    index,
+                    uploadedOn: new Date()
+            }}}, { new: true })
 
-                console.log('nC: ', content);
+            console.log('nC: ', content);
 
-                if (content) {
-                    const partsReceived = content.parts?.length;
-                    const partsRemaining = Number(content.totalParts) - partsReceived;
-                    await session.commitTransaction();
-                    return resolve(partsRemaining);
-                } else {
-                    return reject(new Error(`Failed to lookup content with clientID, ${clientID}`));
-                }
-            } catch (error) {
-                await session.abortTransaction();
-                console.error(error);
-                throw error;
-            } finally {
-                session.endSession();
+            if (content) {
+                const partsReceived = content.parts?.length;
+                const partsRemaining = Number(content.totalParts) - partsReceived;
+                return resolve(partsRemaining);
+            } else {
+                return reject(new Error(`Failed to lookup content with clientID, ${clientID}`));
             }
         })
     }
@@ -123,6 +113,38 @@ export class ContentModel {
 
 export class JobModel {
     private _jobModel: IJob;
+    static renditions: Array<Rendition> = [
+        {
+            resolution: "540x960",
+            bitrate: "2000k",
+            audioRate: "128k",
+            crf: "29"
+        },
+        {
+            resolution: "360x640",
+            bitrate: "600k",
+            audioRate: "96k",
+            crf: "34"
+        },
+        {
+            resolution: "240x430",
+            bitrate: "360k",
+            audioRate: "96k",
+            crf: "39"
+        },
+        {
+            resolution: "720x1280",
+            bitrate: "4500k",
+            audioRate: "128k",
+            crf: "25"
+        },
+        {
+            resolution: "1080x1920",
+            bitrate: "6000k",
+            audioRate: "192k",
+            crf: "NaN"  // NaN will upload the original. WARNING: this also needs to be in place to upload original mp4 to cloud
+        },
+    ];
 
     constructor(jobModel: IJob) {
         this._jobModel = jobModel;
@@ -156,7 +178,7 @@ export class JobModel {
 
                 contents.map(async content => {
                     if (content.parts.length >= content.totalParts && 
-                            content.preview_url && this.validateContent(content))
+                            content.preview_url && this.validateContent(content) && this.validateContent(content))
                         {
                             console.log('creating job for ', content.videoID);
                             await this.createJob(content);
@@ -220,35 +242,34 @@ export class JobModel {
         })
     }
 
-    static createJob(content: IContent) : Promise<IJob> {
+    static createJob(content: IContent) : Promise<void> {
         const contentID : String = String(content._id);
         console.info(`Job create of contentID, ${contentID}, started`);
         return new Promise(async (resolve, _reject) => {
             const session = await mongoose.startSession();
             session.startTransaction();
             try {
-                // Create a new job
+                for (const rendition of this.renditions) {
+                    // Create a job to encode rendition
                     const job: IJob = new Job({
                         contentID,
                         createdOn: new Date(),
+                        jobType: "encode",
+                        jobKwargs: JSON.stringify(rendition)
                     });
         
                     let obj = await job.save()
                     
-                    console.info(`Job create (id ${obj._id}) successful`);
-                  
-                // Update the content object to reflect the job created against it
-                    // await Content.findOneAndUpdate({ videoID: new Schema.Types.ObjectId(contentID) }, {
-                    //     $set: { jobCreatedOn: new Date() }
-                    // }).session(session)
                     content.jobCreatedOn = new Date();
                     await content.save();
 
                     console.info('Content updated to reflect job');
+                    console.info(`Job create (id ${obj._id}) successful, rendition=${rendition.resolution}`);
+                }
 
                 await session.commitTransaction();
                 session.endSession();
-                return resolve(job);
+                return resolve();
             } catch (error) {
 
                 // If an error occurred, abort the whole transaction and
