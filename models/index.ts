@@ -25,7 +25,7 @@ export class ContentModel {
         if (content == null) {
             return false;
         }
-        console.log('debug: checking if variants all uploaded')
+        console.log('debug: checking if variants all uploaded')//
         for (const rendition of JobModel.renditions) {
             let isFound = false;
             
@@ -70,14 +70,15 @@ export class ContentModel {
     }
 
     static markVariantDone(contentID: Schema.Types.ObjectId, resolution: string) : Promise<IContent|null> {
+        console.log('marking res: ', resolution);
         return new Promise(async (resolve, reject) => {
             const content = Content.findOneAndUpdate({ _id: String(contentID) }, {
-                variants: { $push: {
+                $push: { variants: {
                     resolution,
                     status: "done"
                 }}
             }, { new: true });
-
+          
             if (content == null) {
                 return reject(new Error(`content was null, id=${contentID}`));
             }
@@ -247,7 +248,7 @@ export class JobModel {
 
     static fetchIncompleteJob() : Promise<IJob|null> {
         return new Promise((resolve, reject) => {
-            const allowed_completion_time = DateTime.utc().minus({ seconds: JOB_COMPLETION_INTERVAL_IN_SECONDS }).toJSDate();
+            const allowed_completion_time = DateTime.utc().minus({ seconds: 10 }).toJSDate();
             Job.findOneAndUpdate({
                 startTime: { $lte: allowed_completion_time }
             }, {
@@ -292,11 +293,11 @@ export class JobModel {
             session.startTransaction();
             try {
                 for (const rendition of this.renditions) {
-                    // Create a job to encode rendition
+                    // Create a job to encode rendition/
                     const job: IJob = new Job({
                         contentID,
                         createdOn: new Date(),
-                        jobType: `encode-${rendition.bitrate}`,
+                        jobType: `encode-${rendition.resolution}`,
                         jobKwargs: JSON.stringify(rendition)
                     });
         

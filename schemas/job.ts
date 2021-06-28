@@ -5,7 +5,7 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 //     local_abs_path: string;
 // }
 
-export interface IJob extends Document {
+export interface IJob extends Document {///
     contentID: Schema.Types.ObjectId;
     startTime: Date;
     endTime: Date;

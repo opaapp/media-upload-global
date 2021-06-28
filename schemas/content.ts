@@ -4,7 +4,7 @@ export interface IContentPart extends Document {
     payload: Buffer;
 }
 
-export interface IContent extends Document {
+export interface IContent extends Document {///
     videoID: Schema.Types.ObjectId;
     clientID: string;
     createdOn: Date;
