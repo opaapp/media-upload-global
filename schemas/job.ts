@@ -34,7 +34,6 @@ _JobSchema.methods.updateStartTime = function() {
     return;
 }
 
-
 _JobSchema.index({ startTime: 1, createdOn: 1 });
 _JobSchema.index({ contentID: 1, jobType: 1 }, { unique: true });
   

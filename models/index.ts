@@ -21,6 +21,31 @@ export class ContentModel {
         this._contentModel = contentModel;
     }
 
+    static isVariantsUploaded(content: IContent|null): boolean {
+        if (content == null) {
+            return false;
+        }
+        console.log('debug: checking if variants all uploaded')
+        for (const rendition of JobModel.renditions) {
+            let isFound = false;
+            
+            for (const variant of content.variants) {
+                if (variant.resolution == rendition.resolution) {
+                    isFound = true;
+                    break;
+                }
+            }
+            
+            if (isFound) {
+                continue;
+            } else {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     static addThumbnail(clientID: string, preview_url: string) : Promise<void> {
         return new Promise(async (resolve, reject) => {
             try {
@@ -41,6 +66,23 @@ export class ContentModel {
                 console.error(error);
                 return reject(error);
             }
+        })
+    }
+
+    static markVariantDone(contentID: Schema.Types.ObjectId, resolution: string) : Promise<IContent|null> {
+        return new Promise(async (resolve, reject) => {
+            const content = Content.findOneAndUpdate({ _id: String(contentID) }, {
+                variants: { $push: {
+                    resolution,
+                    status: "done"
+                }}
+            }, { new: true });
+
+            if (content == null) {
+                return reject(new Error(`content was null, id=${contentID}`));
+            }
+
+            return resolve(content);
         })
     }
 

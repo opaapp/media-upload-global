@@ -16,6 +16,11 @@ export interface IContent extends Document {
         index: number,
         uploadedOn: Date
     }];
+    variants: [{
+        resolution: string;
+        status: string;
+        uploadedOn: Date;
+    }]
 }
 
 export interface IContentModel extends Model<IContent> {}
@@ -27,6 +32,11 @@ const _ContentSchema: Schema = new Schema({
     jobCreatedOn: { type: Date, required: false, default: undefined },
     totalParts: { type: Number, required: true},
     preview_url: { type: String, required: false },
+    variants: [{
+        resolution: { type: String, required: true },
+        status: { type: String, required: true },
+        uploadedOn: { type: Date, required: true }
+    }],
     parts: [{
         part: { type: Schema.Types.ObjectId, ref: 'contentparts'},
         index: { type: Number, required: true },
