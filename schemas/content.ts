@@ -4,9 +4,10 @@ export interface IContentPart extends Document {
     payload: Buffer;
 }
 
-export interface IContent extends Document {///
+export interface IContent extends Document {
     videoID: Schema.Types.ObjectId;
     clientID: string;
+    mediaHash: string;
     createdOn: Date;
     jobCreatedOn: Date;
     totalParts: number;
@@ -32,6 +33,7 @@ const _ContentSchema: Schema = new Schema({
     jobCreatedOn: { type: Date, required: false, default: undefined },
     totalParts: { type: Number, required: true},
     preview_url: { type: String, required: false },
+    mediaHash: { type: String, required: true },
     variants: [{
         resolution: { type: String, required: true },
         status: { type: String, required: true },

@@ -129,11 +129,12 @@ export class ContentModel {
         })
     }
 
-    static createNew(videoID: string, clientID: string, totalParts: number) {
+    static createNew(videoID: string, clientID: string, totalParts: number, mediaHash: string) {
         return new Promise((resolve, reject) => {
             const content: IContent = new Content({
                 videoID,
                 clientID,
+                mediaHash,
                 totalParts,
                 createdOn: new Date()
             });
