@@ -3,19 +3,21 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 export interface IContentPart extends Document {
     payload: Buffer;
 }
-
-export interface IContent extends Document {///
+//
+export interface IContent extends Document {
     videoID: Schema.Types.ObjectId;
     clientID: string;
+    userID: Schema.Types.ObjectId;
+    mediaHash: string;
     createdOn: Date;
     jobCreatedOn: Date;
     totalParts: number;
     preview_url: string;
-    parts: [{
+    parts: {
         part: Schema.Types.ObjectId,
         index: number,
         uploadedOn: Date
-    }];
+    }[];
     variants: [{
         resolution: string;
         status: string;
@@ -28,10 +30,12 @@ export interface IContentModel extends Model<IContent> {}
 const _ContentSchema: Schema = new Schema({
     videoID: { type: Schema.Types.ObjectId, required: true, unique: true },
     clientID: { type: String, required: true, unique: true },
+    userID: { type: Schema.Types.ObjectId, required: true },
     createdOn: { type: Date, required: true },
     jobCreatedOn: { type: Date, required: false, default: undefined },
     totalParts: { type: Number, required: true},
     preview_url: { type: String, required: false },
+    mediaHash: { type: String, required: true },
     variants: [{
         resolution: { type: String, required: true },
         status: { type: String, required: true },

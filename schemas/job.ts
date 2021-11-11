@@ -4,8 +4,8 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 //     cloud_url: string;
 //     local_abs_path: string;
 // }
-
-export interface IJob extends Document {///
+//
+export interface IJob extends Document {
     contentID: Schema.Types.ObjectId;
     startTime: Date;
     endTime: Date;
@@ -34,6 +34,7 @@ _JobSchema.methods.updateStartTime = function() {
     return;
 }
 
+// update for isContentValidated
 _JobSchema.index({ startTime: 1, createdOn: 1 });
 _JobSchema.index({ contentID: 1, jobType: 1 }, { unique: true });
   
