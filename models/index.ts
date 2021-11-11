@@ -138,7 +138,7 @@ export class ContentModel {
             return resolve(content);
         })
     }
-
+//
     static partExists(clientID: string, index: number) : Promise<boolean> {
         return new Promise(async (resolve, _) => {
             const content = await Content.findOne({ clientID });
@@ -153,7 +153,7 @@ export class ContentModel {
             return resolve(false);
         })
     }
-
+//
     static addPart(clientID: string, payload: Buffer, index: number) : Promise<number> {
         return new Promise(async (resolve, reject) => {
             const contentPart: IContentPart = new ContentPart({ payload });
@@ -181,11 +181,13 @@ export class ContentModel {
         })
     }
 
-    static createNew(videoID: string, clientID: string, totalParts: number, mediaHash: string) {
+    static createNew(videoID: string, clientID: string, userID: string, totalParts: number, mediaHash: string) {
+        console.log('mHASHHH: ', mediaHash)
         return new Promise((resolve, reject) => {
             const content: IContent = new Content({
                 videoID,
                 clientID,
+                userID,
                 mediaHash,
                 totalParts,
                 createdOn: new Date()
