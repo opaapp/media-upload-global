@@ -4,6 +4,7 @@ import { Content, IContent, ContentPart, IContentPart, IContentPartModel } from 
 import { Logger } from '@overnightjs/logger';
 import { DateTime } from 'luxon';
 const crypto = require('crypto');
+import axios from 'axios'
 import fs from 'fs';
 import { resolve } from 'path';
 import { recreateMP4 } from '../util';
@@ -18,6 +19,24 @@ export interface Rendition {
     bitrate: string;
     audioRate: string;
     crf: string;
+}
+
+// todo: use env
+// const HTTP_SYNC_HOST = 'http://opa-app-test1-opaapp-sync';
+const HTTP_SYNC_HOST = `http://${process.env['SYNC_HOST']}`;
+
+console.log('HTTP_SYNC_HOST: ', HTTP_SYNC_HOST);
+
+async function sendClientReencode(userId: string, clientId: string) {
+    try {
+        await axios.post(`${HTTP_SYNC_HOST}/video/reencode`, {
+            userId,
+            clientId
+        })
+    } catch (err) {
+        console.log('ERROR: failed to send reenncode');
+        console.log((err as Error).stack);
+    }
 }
 
 function sendError(msg: string) {
@@ -65,7 +84,7 @@ export class ContentModel {
         // resources
         const payload = fs.readFileSync(source_path);
         const calculatedHash = crypto.createHash('sha256').update(payload).digest('hex');
-        
+        // console.log('CC: ', content)
         if (calculatedHash != content.mediaHash) {
             console.log(`calculatedHash(${calculatedHash}) != content.mediaHash(${content.mediaHash})`);
         }
@@ -290,9 +309,6 @@ export class JobModel {
                 if (!isValid) {
                     const err_msg = `media hash validation failed, job contentID=${content._id}`;
                     sendError(err_msg);
-                    
-                    // sendClientReencode(content.clientID, String(content.userID));
-                    // return reject(err_msg);
                     return resolve(false);
                 }
 
@@ -320,6 +336,9 @@ export class JobModel {
                                 if (isMP4Valid) {
                                     console.log('creating job for ', content.videoID);
                                     await this.createJob(content);
+                                } else {
+                                    await ContentModel.cleanUp(content);
+                                    await sendClientReencode(String(content.userID), content.clientID);
                                 }
                             } catch (err) {
                                 console.log('TEST HERE')
