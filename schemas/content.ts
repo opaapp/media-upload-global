@@ -3,11 +3,11 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 export interface IContentPart extends Document {
     payload: Buffer;
 }
-//
+
 export interface IContent extends Document {
     videoID: Schema.Types.ObjectId;
     clientID: string;
-    userID: Schema.Types.ObjectId;
+    userID: mongoose.Types.ObjectId;
     mediaHash: string;
     createdOn: Date;
     updatedOn: Date;

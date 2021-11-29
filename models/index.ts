@@ -13,7 +13,7 @@ import { emit } from 'process';
 
 const HTTP_SYNC_HOST = `http://${process.env['SYNC_HOST']}`;
 
-const ObjectId = mongoose.Types.ObjectId;
+export const ObjectId = mongoose.Types.ObjectId;
 
 const JOB_COMPLETION_INTERVAL_IN_SECONDS: number = Number(process.env['JOB_COMPLETION_INTERVAL_IN_SECONDS']) || 80;
 
@@ -25,6 +25,9 @@ export interface Rendition {
     audioRate: string;
     crf: string;
 }
+
+// TODO: env var
+const MAX_MP4_VALIDATION_ATTEMPTS = 3;
 
 async function sendClientReencode(userId: string, clientId: string) {
     try {
@@ -82,6 +85,15 @@ export class ContentModel {
                 return;
             }
         })
+    }
+
+    static async fetchClientIDsToReencode(userID: string) : Promise<string[]> {
+        const contents = await Content.find({ 
+            userID: ObjectId(userID), 
+            jobCreatedOn: { $exists: false},
+            mp4ValidationFailureCount: { $lt: MAX_MP4_VALIDATION_ATTEMPTS }
+        });
+        return contents.map(x => x.clientID);
     }
 
     static validateMP4(content: IContent, source_path: string) : boolean {
