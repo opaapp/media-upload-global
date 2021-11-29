@@ -26,8 +26,10 @@ export interface Rendition {
     crf: string;
 }
 
-// TODO: env var
-const MAX_MP4_VALIDATION_ATTEMPTS = 3;
+const MAX_MP4_VALIDATION_ATTEMPTS = process.env['MAX_MP4_VALIDATION_ATTEMPTS'];
+
+// todo: remove this
+console.log('MAX_MP4_VALIDATION_ATTEMPTS: ', MAX_MP4_VALIDATION_ATTEMPTS);
 
 async function sendClientReencode(userId: string, clientId: string) {
     try {
