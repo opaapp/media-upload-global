@@ -9,10 +9,15 @@ import fs from 'fs';
 import { resolve } from 'path';
 import { recreateMP4 } from '../util';
 import { ObjectID } from 'bson';
+import { emit } from 'process';
+
+const HTTP_SYNC_HOST = `http://${process.env['SYNC_HOST']}`;
 
 const ObjectId = mongoose.Types.ObjectId;
 
 const JOB_COMPLETION_INTERVAL_IN_SECONDS: number = Number(process.env['JOB_COMPLETION_INTERVAL_IN_SECONDS']) || 80;
+
+var bTrigger: Record<string, boolean> = {};
 
 export interface Rendition {
     resolution: string;
@@ -20,12 +25,6 @@ export interface Rendition {
     audioRate: string;
     crf: string;
 }
-
-// todo: use env
-// const HTTP_SYNC_HOST = 'http://opa-app-test1-opaapp-sync';
-const HTTP_SYNC_HOST = `http://${process.env['SYNC_HOST']}`;
-
-console.log('HTTP_SYNC_HOST: ', HTTP_SYNC_HOST);
 
 async function sendClientReencode(userId: string, clientId: string) {
     try {
@@ -50,31 +49,37 @@ export class ContentModel {
         this._contentModel = contentModel;
     }
 
-    static cleanUp(content: IContent) {
+    static cleanUp(content: IContent, reason: string) {
         return new Promise<void>(async (res, rej) => {
             // clean up content parts
-            // const session = await mongoose.startSession();
-            // session.startTransaction();
-            console.log('HERE')
+            const session = await mongoose.startSession();
+            session.startTransaction();
             try {
                 for (let i=0; i<content.parts.length; i++) {
-                    await ContentPart.findByIdAndDelete(content.parts[i].part);
+                    await ContentPart.findByIdAndDelete(content.parts[i].part, { session });
                 }
-                console.log('A')
-                content.parts = [];
-                await content.save();
-                // await Content.findOneAndDelete({ _id: content._id });
-                console.log('Bae')///
-                // await session.commitTransaction();
-                // session.endSession();
-                return res();
-            } catch (error) {
 
+                if (reason == 'invalid_mp4') {
+                    await Content.findOneAndUpdate({ _id: content._id }, {
+                        "$set": { parts: [] },
+                        "$inc": { mp4ValidationFailureCount: 1 }
+                    }, { session });
+                } else if (reason == 'deleted') {
+                    await Content.findOneAndDelete({ _id: content._id }, { session });
+                } else {
+                    throw new Error(`invalid reason=${reason}`);
+                }
+
+                await session.commitTransaction();
+                res();
+            } catch (error) {
                 // If an error occurred, abort the whole transaction and
                 // undo any changes that might have happened
-                // await session.abortTransaction();
-                // session.endSession();
-                return rej(error); 
+                await session.abortTransaction();
+                rej(error); 
+            } finally {
+                session.endSession();
+                return;
             }
         })
     }
@@ -84,7 +89,6 @@ export class ContentModel {
         // resources
         const payload = fs.readFileSync(source_path);
         const calculatedHash = crypto.createHash('sha256').update(payload).digest('hex');
-        // console.log('CC: ', content)
         if (calculatedHash != content.mediaHash) {
             console.log(`calculatedHash(${calculatedHash}) != content.mediaHash(${content.mediaHash})`);
         }
@@ -125,8 +129,6 @@ export class ContentModel {
                 }, {
                     $set: { preview_url }
                 }, { new: true })
-                console.log('setting ', clientID, ' for ', preview_url);
-                console.log('nC: ', content);
 
                 if (content) {
                     return resolve();
@@ -157,7 +159,7 @@ export class ContentModel {
             return resolve(content);
         })
     }
-//
+
     static partExists(clientID: string, index: number) : Promise<boolean> {
         return new Promise(async (resolve, _) => {
             const content = await Content.findOne({ clientID });
@@ -172,7 +174,7 @@ export class ContentModel {
             return resolve(false);
         })
     }
-//
+
     static addPart(clientID: string, payload: Buffer, index: number) : Promise<number> {
         return new Promise(async (resolve, reject) => {
             const contentPart: IContentPart = new ContentPart({ payload });
@@ -201,7 +203,6 @@ export class ContentModel {
     }
 
     static createNew(videoID: string, clientID: string, userID: string, totalParts: number, mediaHash: string) {
-        console.log('mHASHHH: ', mediaHash)
         return new Promise((resolve, reject) => {
             const content: IContent = new Content({
                 videoID,
@@ -286,37 +287,27 @@ export class JobModel {
         return true;
     }
 
-    static recreateAndValidateMP4(content: IContent) : Promise<boolean> {
-        // 1. recreate mp4
-        // 2. validate mp4
-        // if valid, then 
-          // a. delete contentparts
-          // b. return true
+    static async recreateAndValidateMP4(content: IContent) : Promise<void> {
+        const [source_path,] = await recreateMP4(content._id);
 
-        // if not valid, then
-          // a. delete contentpart + reference to content part in single transaction
-          // b. send recreate sync api call
-          // c. return false
-
-        return new Promise(async (resolve,reject) => {
-            try {
-                const [source_path,] = await recreateMP4(content._id);
-
-                // TODO: change back to const
-                let isValid = ContentModel.validateMP4(content, source_path);
-                console.log(`TEST: isValid=${isValid} .. changing to false`)
-                isValid = false;
-                if (!isValid) {
-                    const err_msg = `media hash validation failed, job contentID=${content._id}`;
-                    sendError(err_msg);
-                    return resolve(false);
-                }
-
-                return resolve(true);
-            } catch (err) {
-                return reject(err)
-            }
-        })
+        // TODOO: change back to const
+        let isValid = ContentModel.validateMP4(content, source_path);
+        if (bTrigger[content._id] === undefined) {
+            isValid = false;
+            bTrigger[content._id] = false;
+        } else {
+            isValid = false;
+            bTrigger[content._id] = true;
+        }
+        
+        console.log(`TEST: isValid=${isValid}`)
+        // isValid = false;
+        if (!isValid) {
+            const errMessage = `media hash validation failed, job contentID=${content._id}`;
+            sendError(errMessage);
+            // return resolve(false);
+            throw new Error(errMessage);
+        }
     }
 
     static fetchContent() : Promise<void> {
@@ -332,18 +323,13 @@ export class JobModel {
                             this.validateContent(content))
                         {
                             try {
-                                const isMP4Valid = await this.recreateAndValidateMP4(content);
-                                if (isMP4Valid) {
-                                    console.log('creating job for ', content.videoID);
-                                    await this.createJob(content);
-                                } else {
-                                    await ContentModel.cleanUp(content);
-                                    await sendClientReencode(String(content.userID), content.clientID);
-                                }
+                                await this.recreateAndValidateMP4(content);
+                                console.log('creating job for ', content.videoID);
+                                await this.createJob(content);
                             } catch (err) {
-                                console.log('TEST HERE')
-                                ContentModel.cleanUp(content);
-                                console.log('Validation error: ', err)
+                                await ContentModel.cleanUp(content, "invalid_mp4");
+                                await sendClientReencode(String(content.userID), content.clientID);
+                                console.log('ERROR: Validate MP4: ', err)
                             }
                         }
                 })
@@ -413,33 +399,22 @@ export class JobModel {
             session.startTransaction();
             try {
                 for (const rendition of this.renditions) {
-                    // Create a job to encode rendition/
+                    // Create a job to encode rendition
                     const jobType = `encode-${rendition.resolution}`;
-                    let obj = await Job.findOneAndUpdate({
+                    await Job.findOneAndUpdate({
                         contentID: content._id, 
                         jobType
                     }, {
                         createdOn: new Date(),
                         jobKwargs: JSON.stringify(rendition)
-                    }, { upsert: true });
-
-                    // const job: IJob = new Job({
-                    //     contentID,
-                    //     ,
-                    //     jobType: ,
-                        
-                    // });
-        
-                    // let obj = await job.save()
-                    console.log('obj: ', obj);
-
-                    content.jobCreatedOn = new Date();
-                    console.log('A')
-                    await content.save();
-                    console.log('B')
-                    console.info('Content updated to reflect job');
-                    console.info(`Job create (id ${obj?._id}) successful, rendition=${rendition.resolution}`);
+                    }, { upsert: true, session });
+            
+                    console.info(`Job created successfully, rendition=${rendition.resolution}`);
                 }
+
+                content.jobCreatedOn = new Date();
+                await content.save({ session });
+                console.info('Content updated to reflect job');
 
                 await session.commitTransaction();
                 session.endSession();

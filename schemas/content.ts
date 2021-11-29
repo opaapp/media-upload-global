@@ -10,6 +10,8 @@ export interface IContent extends Document {
     userID: Schema.Types.ObjectId;
     mediaHash: string;
     createdOn: Date;
+    updatedOn: Date;
+    mp4ValidationFailureCount: number;
     jobCreatedOn: Date;
     totalParts: number;
     preview_url: string;
@@ -32,6 +34,8 @@ const _ContentSchema: Schema = new Schema({
     clientID: { type: String, required: true, unique: true },
     userID: { type: Schema.Types.ObjectId, required: true },
     createdOn: { type: Date, required: true },
+    updatedOn: { type: Date, required: false },
+    mp4ValidationFailureCount: { type: Number, required: false, default: 0 },
     jobCreatedOn: { type: Date, required: false, default: undefined },
     totalParts: { type: Number, required: true},
     preview_url: { type: String, required: false },
