@@ -11,13 +11,13 @@ import { recreateMP4 } from '../util';
 import { ObjectID } from 'bson';
 import { emit } from 'process';
 
+type LoggerCallback = (logError: string) => void;
+
 const HTTP_SYNC_HOST = `http://${process.env['SYNC_HOST']}`;
 
 export const ObjectId = mongoose.Types.ObjectId;
 
 const JOB_COMPLETION_INTERVAL_IN_SECONDS: number = Number(process.env['JOB_COMPLETION_INTERVAL_IN_SECONDS']) || 80;
-
-var bTrigger: Record<string, boolean> = {};
 
 export interface Rendition {
     resolution: string;
@@ -39,10 +39,6 @@ async function sendClientReencode(userId: string, clientId: string) {
         console.log('ERROR: failed to send reenncode');
         console.log((err as Error).stack);
     }
-}
-
-function sendError(msg: string) {
-    console.log(msg);
 }
 
 export class ContentModel {
@@ -68,7 +64,7 @@ export class ContentModel {
                         "$inc": { mp4ValidationFailureCount: 1 }
                     }, { session });
                 } else if (reason == 'deleted') {
-                    await Content.findOneAndDelete({ _id: content._id }, { session });
+                    ; //pass
                 } else {
                     throw new Error(`invalid reason=${reason}`);
                 }
@@ -299,30 +295,21 @@ export class JobModel {
         return true;
     }
 
-    static async recreateAndValidateMP4(content: IContent) : Promise<void> {
+    static async recreateAndValidateMP4(content: IContent, callback: LoggerCallback) : Promise<void> {
         const [source_path,] = await recreateMP4(content._id);
 
-        // TODOO: change back to const
-        let isValid = ContentModel.validateMP4(content, source_path);
-        if (bTrigger[content._id] === undefined) {
-            isValid = false;
-            bTrigger[content._id] = false;
-        } else {
-            isValid = false;
-            bTrigger[content._id] = true;
-        }
-        
-        console.log(`TEST: isValid=${isValid}`)
-        // isValid = false;
+        const isValid = ContentModel.validateMP4(content, source_path);
         if (!isValid) {
-            const errMessage = `media hash validation failed, job contentID=${content._id}`;
-            sendError(errMessage);
-            // return resolve(false);
+            const errMessage = `media hash validation failed > max times(${MAX_MP4_VALIDATION_ATTEMPTS}), job contentID=${content._id}`;
+            if (content.mp4ValidationFailureCount == MAX_MP4_VALIDATION_ATTEMPTS - 1) {
+                callback(errMessage);
+            }
+            
             throw new Error(errMessage);
         }
     }
 
-    static fetchContent() : Promise<void> {
+    static fetchContent(callback: LoggerCallback) : Promise<void> {
         return new Promise((resolve, reject) => {
             Content.find({ jobCreatedOn: undefined }, (err, contents) => {
                 if (err) {
@@ -335,7 +322,7 @@ export class JobModel {
                             this.validateContent(content))
                         {
                             try {
-                                await this.recreateAndValidateMP4(content);
+                                await this.recreateAndValidateMP4(content, callback);
                                 console.log('creating job for ', content.videoID);
                                 await this.createJob(content);
                             } catch (err) {
