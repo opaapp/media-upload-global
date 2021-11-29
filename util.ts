@@ -18,7 +18,7 @@ export async function recreateMP4(contentID: Schema.Types.ObjectId) : Promise<[s
         let outputFile = fs.createWriteStream(outputDir);
         for (let i=0; i < content.totalParts; i++) {
             const _id = contentPartOrdering[i];
-            console.log('here')
+
             const part = await ContentPart.findById(_id);
             if (part) {
                 await (() => {
