@@ -26,7 +26,7 @@ export interface Rendition {
     crf: string;
 }
 
-const MAX_MP4_VALIDATION_ATTEMPTS = process.env['MAX_MP4_VALIDATION_ATTEMPTS'];
+const MAX_MP4_VALIDATION_ATTEMPTS = Number(process.env['MAX_MP4_VALIDATION_ATTEMPTS'])!;
 
 // todo: remove this
 console.log('MAX_MP4_VALIDATION_ATTEMPTS: ', MAX_MP4_VALIDATION_ATTEMPTS);
@@ -91,7 +91,7 @@ export class ContentModel {
             jobCreatedOn: { $exists: false},
             mp4ValidationFailureCount: { $lt: MAX_MP4_VALIDATION_ATTEMPTS }
         });
-        return contents.map(x => x.clientID);
+        return contents.map((x: any) => x.clientID);
     }
 
     static validateMP4(content: IContent, source_path: string) : boolean {
