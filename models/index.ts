@@ -110,7 +110,7 @@ export class ContentModel {
         if (content == null) {
             return false;
         }
-        console.log('debug: checking if variants all uploaded')//
+        console.log('debug: checking if variants all uploaded')
         for (const rendition of JobModel.renditions) {
             let isFound = false;
             
@@ -347,7 +347,7 @@ export class JobModel {
                     return reject(err);
                 }
 
-                console.log('deleted: ', res);
+                console.log('deleted job: ', res);
                 return resolve(true);
             })
         })
