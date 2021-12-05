@@ -26,7 +26,7 @@ export interface Rendition {
     crf: string;
 }
 
-const MAX_MP4_VALIDATION_ATTEMPTS = Number(process.env['MAX_MP4_VALIDATION_ATTEMPTS'])!;
+const MAX_MP4_VALIDATION_ATTEMPTS = Number(process.env['MAX_MP4_VALIDATION_ATTEMPTS']!);
 
 // todo: remove this
 console.log('MAX_MP4_VALIDATION_ATTEMPTS: ', MAX_MP4_VALIDATION_ATTEMPTS);
