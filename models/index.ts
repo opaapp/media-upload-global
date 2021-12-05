@@ -102,7 +102,7 @@ export class ContentModel {
         if (calculatedHash != content.mediaHash) {
             console.log(`calculatedHash(${calculatedHash}) != content.mediaHash(${content.mediaHash})`);
         }
-    
+
         return calculatedHash == content.mediaHash;
     }
 
@@ -302,7 +302,7 @@ export class JobModel {
 
         const isValid = ContentModel.validateMP4(content, source_path);
         if (!isValid) {
-            const errMessage = `media hash validation failed > max times(${MAX_MP4_VALIDATION_ATTEMPTS}), job contentID=${content._id}`;
+            const errMessage = `media hash validation failed ${content.mp4ValidationFailureCount + 1} times, job contentID=${content._id}`;
             if (content.mp4ValidationFailureCount == MAX_MP4_VALIDATION_ATTEMPTS - 1) {
                 callback(errMessage);
             }
@@ -329,8 +329,11 @@ export class JobModel {
                                 await this.createJob(content);
                             } catch (err) {
                                 await ContentModel.cleanUp(content, "invalid_mp4");
-                                await sendClientReencode(String(content.userID), content.clientID);
-                                console.log('ERROR: Validate MP4: ', err)
+                                if (content.mp4ValidationFailureCount < MAX_MP4_VALIDATION_ATTEMPTS) {
+                                    await sendClientReencode(String(content.userID), content.clientID);
+                                }
+                                
+                                console.log('ERROR: Invalid MP4: ', err)
                             }
                         }
                 })
